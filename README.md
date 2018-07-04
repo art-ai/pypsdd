@@ -16,6 +16,9 @@ and manipulating SDDs.  Various wrappers are also available:
 * PySDD (Python): https://github.com/wannesm/PySDD
 * JSDD (Java): https://github.com/ML-KULeuven/JSDD
 
+We suggest using the PyPy interpreter (https://pypy.org/) with the
+PyPSDD Package.
+
 ## REFERENCES
 
 The PSDD was originally introduced in the paper:
