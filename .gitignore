@@ -16,3 +16,6 @@ TODO
 *.pyc
 *.dot
 *.png
+dist
+build
+*.egg-info
