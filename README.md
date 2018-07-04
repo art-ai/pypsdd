@@ -23,7 +23,8 @@ The PSDD was originally introduced in the paper:
 ```
 "Probabilistic Sentential Decision Diagrams"
 by Doga Kisa and Guy Van den Broeck and Arthur Choi and Adnan Darwiche
-In Proceedings of the 14th International Conference on Principles of Knowledge Representation and Reasoning (KR), 2014.
+In Proceedings of the 14th International Conference on 
+   Principles of Knowledge Representation and Reasoning (KR), 2014.
 ```
 http://reasoning.cs.ucla.edu/fetch.php?id=136&type=pdf
 
