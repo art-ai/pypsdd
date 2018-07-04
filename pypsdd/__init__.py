@@ -5,7 +5,7 @@ PyPSDD
 
     PyPSDD is a Python package for inference and learning with PSDDs.
 
-    https://reasoning.cs.ucla.edu/psdd
+    https://github.com/art-ai/pypsdd
 """
 __author__ = ("Arthur Choi <aychoi@cs.ucla.edu>")
 __license__ = "Apache License, Version 2.0"

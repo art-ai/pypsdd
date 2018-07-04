@@ -19,6 +19,8 @@ and manipulating SDDs.  Various wrappers are also available:
 We suggest using the PyPy interpreter (https://pypy.org/) with the
 PyPSDD Package.
 
+See also: http://reasoning.cs.ucla.edu/psdd/
+
 ## REFERENCES
 
 The PSDD was originally introduced in the paper:
@@ -30,7 +32,6 @@ In Proceedings of the 14th International Conference on
    Principles of Knowledge Representation and Reasoning (KR), 2014.
 ```
 http://reasoning.cs.ucla.edu/fetch.php?id=136&type=pdf
-
 
 ## AUTHORS
 
