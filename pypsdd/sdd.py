@@ -408,6 +408,77 @@ class NormalizedSddNode(SddNode):
 
         return count
 
+    def get_weighted_mpe(self, lit_weights, clear_data=True):
+        """Compute the MPE instation given weights associated with literals.
+
+        Assumes the SDD is normalized.
+        """
+        for node in self.as_positive_list(clear_data=clear_data):
+            if node.is_false():
+                # No configuration on false
+                data = (0, [])
+            elif node.is_true():
+                # Need to pick max assignment for variable here
+                b_ind = max([0,1], key=lambda x: lit_weights[node.vtree.var-1][x])
+                # If it's a 0, then -lit number, else lit number
+                data = (lit_weights[node.vtree.var-1][b_ind], [pow(-1,b_ind+1) * node.vtree.var])
+            elif node.is_literal():
+                if node.literal > 0:
+                    data = (lit_weights[node.literal-1][1], [node.literal])
+                else:
+                    data = (lit_weights[-node.literal-1][0], [node.literal])
+            else: # node is_decomposition()
+                data = max(((p.data[0] * s.data[0], p.data[1] + s.data[1]) for p,s in node.positive_elements)
+                        , key=lambda x: x[0])
+            node.data = data
+        return data
+
+    def weighted_model_count(self, lit_weights, clear_data=True):
+        """ Compute weighted model count given literal weights
+
+        Assumes the SDD is normalized.
+        """
+        for node in self.as_list(clear_data=clear_data):
+            if node.is_false():
+                data = 0
+            elif node.is_true():
+                data = 1
+            elif node.is_literal():
+                if node.literal > 0:
+                    data = lit_weights[node.literal-1][1]
+                else:
+                    data = lit_weights[-node.literal-1][0]
+            else: # node is_decomposition
+                data = sum(p.data * s.data for p,s in node.elements)
+            node.data = data
+        return data
+
+    def generate_tf_ac(self, litleaves, clear_data=True):
+        """ Generates a tensorflow arithmetic circuit according to the weighted model counting procedure for this SDD.
+
+        Assumes the SDD is normalized.
+        """
+
+        # Going to need tensorflow for this, but not for the rest of the project, so import here
+        import tensorflow as tf
+
+        for node in self.as_list(clear_data=clear_data):
+            if node.is_false():
+                data = tf.constant(0.0)
+            elif node.is_true():
+                data = tf.constant(1.0)
+            elif node.is_literal():
+                if node.literal > 0:
+                    data = litleaves[node.literal-1][1]
+                else:
+                    data = litleaves[-node.literal-1][0]
+            else: # node.is_decomposition
+                data = tf.add_n([tf.multiply(p.data, s.data) for p,s in node.elements])
+            node.data = data
+        return data
+
+
+
 ########################################
 # MODEL ENUMERATION
 ########################################
