@@ -1,3 +1,4 @@
+import sys
 import time
 
 class Timer:
@@ -23,8 +24,10 @@ class Timer:
 
     def __enter__(self):
         print self.prefix + self.msg + " ...",
+        sys.stdout.flush()
         self.start = time.time()
         return self
 
     def __exit__(self,type,value,traceback):
         print "%.3fs" % (time.time()-self.start)
+        sys.stdout.flush()
