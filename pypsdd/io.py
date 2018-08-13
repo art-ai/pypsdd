@@ -311,3 +311,99 @@ def psdd_yitao_read(filename,pmanager):
             nodes[node_id] = node
     f.close()
     return node
+
+########################################
+# PSDD I/O (JASON)
+########################################
+
+_psdd_jason_file_header = \
+    ("c ids of psdd nodes start at 0\n"
+     "c psdd nodes appear bottom-up, children before parents\n"
+     "c file syntax:\n"
+     "c psdd count-of-psdd-nodes\n"
+     "c L id-of-literal-sdd-node id-of-vtree literal\n"
+     "c T id-of-trueNode-sdd-node id-of-vtree variable log(neg_prob) log(pos_prob)\n"
+     "c D id-of-decomposition-sdd-node id-of-vtree number-of-elements {id-of-prime id-of-sub log(elementProb)}*\n"
+     "c\n")
+
+def psdd_jason_read(filename,pmanager):
+    """Read a PSDD (Jason) from file (not well tested!!!)"""
+    vtree_nodes = pmanager.vtree.to_list()
+    var_to_vtree = pmanager.vtree.var_to_vtree()
+    f = open(filename,'r')
+    for line in f:
+        node = None
+        if line.startswith('c'): continue
+        elif line.startswith('psdd'):
+            node_count = int(line[4:]) # ignored
+            nodes = {}
+        elif line.startswith('F'): # no FALSE nodes
+            pass
+        elif line.startswith('T'):
+            line = line[2:].split()
+            node_id,vtree_id,var = [ int(x) for x in line[:-2] ]
+            log_ntheta,log_ptheta = float(line[-2]),float(line[-1])
+            vtree = var_to_vtree[var]
+            node = PSddNode(SddNode.TRUE,None,vtree,pmanager)
+            node.theta = [ math.exp(log_ntheta),math.exp(log_ptheta) ]
+            node.theta_sum = sum(node.theta)
+        elif line.startswith('L'):
+            node_id,vtree_id,lit = [ int(x) for x in line[2:].split() ]
+            node = pmanager.literals[lit]
+            node.theta = [0.0,0.0]
+            node.theta[node.literal > 0] = 1.0
+            node.theta_sum = 1.0
+        elif line.startswith('D'):
+            line = line[2:].split()
+            node_id,vtree_id,size = [ int(x) for x in line[:3] ]
+            line_iter = iter(line[3:])
+            elements,theta = list(),dict()
+            for i in xrange(size):
+                p = nodes[int(line_iter.next())]
+                s = nodes[int(line_iter.next())]
+                log_theta = float(line_iter.next())
+                element = (p,s)
+                elements.append(element)
+                theta[element] = math.exp(log_theta)
+            left_vtree = p.vtree
+            right_vtree = s.vtree
+            assert p.vtree.parent == s.vtree.parent
+            vtree = p.vtree.parent
+            node = PSddNode(SddNode.DECOMPOSITION,elements,vtree,pmanager)
+            node.theta = theta
+            node.theta_sum = sum( theta.values() )
+        if node:
+            nodes[node_id] = node
+    f.close()
+    return node
+
+def _psdd_jason_repr(self,use_index=False):
+    from math import log
+    if use_index: index = lambda n: n.index
+    else:         index = lambda n: n.id
+    if self.is_false(): # no FALSE nodes
+        st = 'F %d' % index(self)
+    elif self.is_true():
+        ntheta = log(self.theta[0])
+        ptheta = log(self.theta[1])
+        st = 'T %d %.6f %.6f' % (index(self),ntheta,ptheta)
+    elif self.is_literal():
+        st = 'L %d %d %d' % (index(self),self.vtree.id,self.literal)
+    else: # self.is_decomposition()
+        els = self.elements
+        st_el = " ".join( '%d %d %.6f' % \
+                          (index(p),index(s),log(self.theta[(p,s)])) \
+                          for p,s in els )
+        st = 'D %d %d %d %s' % (index(self),self.vtree.id,len(els),st_el)
+    return st
+
+def psdd_jason_save(root,filename):
+    """Save a PSDD (Jason format) to file"""
+    PSddNode._psdd_repr = _psdd_jason_repr
+    _set_index(root)
+    with open(filename,'w') as f:
+        f.write(_psdd_jason_file_header)
+        f.write('psdd %d\n' % root._node_count())
+        for node in root:
+            f.write('%s\n' % node._psdd_repr(use_index=True))
+    del PSddNode._psdd_repr
