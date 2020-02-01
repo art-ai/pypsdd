@@ -19,3 +19,4 @@ TODO
 dist
 build
 *.egg-info
+*.pyo
