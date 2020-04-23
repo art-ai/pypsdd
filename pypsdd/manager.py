@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-from sdd import SddNode
-from psdd import PSddNode
+from __future__ import absolute_import
+from .sdd import SddNode
+from .psdd import PSddNode
 
 class SddManager:
     """SDD Manager"""

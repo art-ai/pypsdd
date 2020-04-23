@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 from os import path
 import locale # for printing numbers with commas
 locale.setlocale(locale.LC_ALL, "en_US.UTF8")
@@ -43,45 +44,45 @@ def run_test(vtree_filename,sdd_filename,N=1024,seed=0,
             test_ll = beta.log_likelihood(testing)/testing.N
 
     # PRINT SOME STATS
-    print "================================"
-    print " sdd model count: %s" % fmt(alpha.model_count(vtree))
-    print "       sdd count: %s" % fmt(alpha.count())
-    print "        sdd size: %s" % fmt(alpha.size())
-    print "================================"
-    print "psdd model count: %s" % fmt(beta.model_count())
-    print "      psdd count: %s" % fmt(beta.count())
-    print "       psdd size: %s" % fmt(beta.size())
-    print "================================"
-    print "     theta count: %s" % fmt(beta.theta_count())
-    print "      zero count: %s" % fmt(beta.zero_count())
-    print "      true count: %s" % fmt(beta.true_count())
+    print("================================")
+    print(" sdd model count: %s" % fmt(alpha.model_count(vtree)))
+    print("       sdd count: %s" % fmt(alpha.count()))
+    print("        sdd size: %s" % fmt(alpha.size()))
+    print("================================")
+    print("psdd model count: %s" % fmt(beta.model_count()))
+    print("      psdd count: %s" % fmt(beta.count()))
+    print("       psdd size: %s" % fmt(beta.size()))
+    print("================================")
+    print("     theta count: %s" % fmt(beta.theta_count()))
+    print("      zero count: %s" % fmt(beta.zero_count()))
+    print("      true count: %s" % fmt(beta.true_count()))
 
     if test_learning:
-        print "================================"
-        print "   training size: %d" % training.N
-        print "    testing size: %d" % testing.N
-        print " unique training: %d" % len(training)
-        print "  unique testing: %d" % len(testing)
-        print "================================"
-        print "     training ll: %.8f" % train_ll
-        print "      testing ll: %.8f" % test_ll
+        print("================================")
+        print("   training size: %d" % training.N)
+        print("    testing size: %d" % testing.N)
+        print(" unique training: %d" % len(training))
+        print("  unique testing: %d" % len(testing))
+        print("================================")
+        print("     training ll: %.8f" % train_ll)
+        print("      testing ll: %.8f" % test_ll)
 
-        print "================================"
-        print training
+        print("================================")
+        print(training)
 
     value = beta.value()
-    print "================================"
-    print "      p(T) value: %.8f" % beta.value()
+    print("================================")
+    print("      p(T) value: %.8f" % beta.value())
 
     e_inst = Inst.from_literal(1,pmanager.var_count)
     pval = beta.value(evidence=e_inst)
     e_inst = Inst.from_literal(-1,pmanager.var_count)
     nval = beta.value(evidence=e_inst)
-    print "p(a)+p(~a) value: %.8f" % (pval+nval)
-    print "      p(a) value: %.8f" % pval
-    print "     p(~a) value: %.8f" % nval
+    print("p(a)+p(~a) value: %.8f" % (pval+nval))
+    print("      p(a) value: %.8f" % pval)
+    print("     p(~a) value: %.8f" % nval)
     if value:
-        print "     probability: %.8f" % beta.probability(evidence=e_inst)
+        print("     probability: %.8f" % beta.probability(evidence=e_inst))
 
     var_marginals = beta.marginals()
     value = var_marginals[0]
@@ -93,7 +94,7 @@ def run_test(vtree_filename,sdd_filename,N=1024,seed=0,
         nval = beta.value(evidence=e_inst)
         if abs(pval+nval - value) > 1e-8: check = False
     assert check
-    print " marginals check: %s" % ("ok" if check else "NOT OK")
+    print(" marginals check: %s" % ("ok" if check else "NOT OK"))
 
     inst = InstMap()
     inst[1] = 1
@@ -109,18 +110,18 @@ def run_test(vtree_filename,sdd_filename,N=1024,seed=0,
         del inst[var]
         if abs(pval+nval - value) > 1e-8: check = False
     assert check
-    print " marginals check: %s" % ("ok" if check else "NOT OK")
+    print(" marginals check: %s" % ("ok" if check else "NOT OK"))
 
     return beta,pmanager
 
 def run_test_basename(basename,test_learning=True):
-    print "######## " + basename
+    print("######## " + basename)
     dirname = path.join(path.dirname(__file__),'examples')
     vtree_filename = path.join(dirname,basename + '.vtree')
     sdd_filename = path.join(dirname,basename + '.sdd')
     alpha,pmanager = run_test(vtree_filename,sdd_filename,\
                               test_learning=test_learning)
-    print
+    print()
     return alpha,pmanager
 
 if __name__ == '__main__':

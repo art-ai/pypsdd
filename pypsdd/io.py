@@ -1,5 +1,6 @@
-from sdd import SddNode
-from psdd import PSddNode
+from __future__ import absolute_import
+from .sdd import SddNode
+from .psdd import PSddNode
 import math
 
 # AC: TODO: check vtree scope
@@ -13,7 +14,7 @@ def pairs(lst):
     if lst is None: return
     it = iter(lst)
     for x in it:
-        y = it.next()
+        y = next(it)
         yield (x,y)
 
 ########################################
@@ -294,9 +295,9 @@ def psdd_yitao_read(filename,pmanager):
             line_iter = iter(line[3:])
             elements,theta = list(),dict()
             for i in xrange(size):
-                p = nodes[int(line_iter.next())]
-                s = nodes[int(line_iter.next())]
-                log_theta = float(line_iter.next())
+                p = nodes[int(next(line_iter))]
+                s = nodes[int(next(line_iter))]
+                log_theta = float(next(line_iter))
                 element = (p,s)
                 elements.append(element)
                 theta[element] = math.exp(log_theta)

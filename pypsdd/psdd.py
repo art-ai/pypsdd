@@ -1,12 +1,14 @@
+from __future__ import print_function
+from __future__ import absolute_import
 import math
 import random
 import heapq
 from itertools import izip
 
-from sdd import SddNode,NormalizedSddNode
-from data import DataSet,Inst,InstMap,WeightedInstMap
-from sdd import SddEnumerator,SddTerminalEnumerator
-from prior import Prior
+from .sdd import SddNode,NormalizedSddNode
+from .data import DataSet,Inst,InstMap,WeightedInstMap
+from .sdd import SddEnumerator,SddTerminalEnumerator
+from .prior import Prior
 
 class PSddNode(NormalizedSddNode):
     """Probabilistic Sentential Decision Diagram (PSDD)
@@ -401,7 +403,7 @@ class PSddNode(NormalizedSddNode):
         n = len(data)
         for i,(inst,count) in enumerate(data):
             if verbose and (n-i-1)%max(1,(n/10)) == 0:
-                print "%3.0f%% done" % (100.0*(i+1)/n)
+                print("%3.0f%% done" % (100.0*(i+1)/n))
             # mark satisfying sub-circuit
             self.is_model_marker(inst,clear_bits=False,clear_data=False)
             self._increment_follow_marker(float(count))
@@ -444,7 +446,7 @@ class SubCircuit:
             return "vt_%d: %d (%d) %.4f" % (vt_id,node_id,self.element,pr)
 
     def print_subcircuit(self):
-        print self
+        print(self)
         if self.node.is_decomposition():
             self.left.print_subcircuit()
             self.right.print_subcircuit()

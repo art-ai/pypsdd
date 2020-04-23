@@ -1,5 +1,6 @@
+from __future__ import absolute_import
 import heapq
-from data import InstMap
+from .data import InstMap
 
 class SddNode:
     """Sentential Decision Diagram (SDD)"""
@@ -582,7 +583,7 @@ class SddNodeEnumerator:
     def next(self):
         while not self.empty():
             enum = heapq.heappop(self.heap)
-            model = enum.next()
+            model = next(enum)
             self.topk.append(model)
             if not enum.empty(): heapq.heappush(self.heap,enum)
             return model
@@ -596,7 +597,7 @@ class SddNodeEnumerator:
                 k += 1
             else:
                 try:
-                    self.next()
+                    next(self)
                 except StopIteration:
                     return
 
@@ -622,7 +623,7 @@ class SddElementEnumerator:
 
         def _try_next(self):
             try:
-                sinst = self.siter.next()
+                sinst = next(self.siter)
                 self.inst = self.pinst.concat(sinst)
                 self.enum_manager._element_update(self.element_enum,self.inst)
             except StopIteration:
@@ -659,7 +660,7 @@ class SddElementEnumerator:
 
     def _push_next_element_enumerator(self,piter):
         try:
-            pinst = piter.next()
+            pinst = next(piter)
         except StopIteration:
             pinst = None
         if pinst is not None:
@@ -670,7 +671,7 @@ class SddElementEnumerator:
     def next(self):
         while not self.empty():
             best = heapq.heappop(self.heap)
-            inst = best.next()
+            inst = next(best)
 
             if best.piter is not None: # generate next prime model
                 piter,best.piter = best.piter,None

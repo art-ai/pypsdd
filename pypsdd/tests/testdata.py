@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from __future__ import print_function
 from os import path
 import random
 from collections import defaultdict
@@ -17,39 +18,39 @@ def fmt(number):
 
 def run_test_inst():
 
-    print "=== Inst ==="
+    print("=== Inst ===")
     inst = Inst([None,1,True,-1,None,-1,None,-1,None,0,False])
-    print "%s == 11------00" % (inst,)
+    print("%s == 11------00" % (inst,))
     inst = Inst.from_dict({1:1,10:0},10)
-    print "%s == 1--------0" % (inst,)
-    print "1 in inst? %s == True" % (1 in inst)
-    print "2 in inst? %s == False" % (2 in inst)
+    print("%s == 1--------0" % (inst,))
+    print("1 in inst? %s == True" % (1 in inst))
+    print("2 in inst? %s == False" % (2 in inst))
     inst = Inst.from_dict({1:1,3:True,8:None,9:-1,10:False},10)
-    print inst
+    print(inst)
     varset = ",".join(str(var) for var in inst.varset)
-    print "varset: (%d) %s" % (len(inst),varset)
+    print("varset: (%d) %s" % (len(inst),varset))
     for var,val in inst:
-        print "inst[%d] = %d" % (var,val)
+        print("inst[%d] = %d" % (var,val))
 
     inst = Inst.from_list([1,1,1,0,1,1,-1,None],10,zero_indexed=True)
-    print inst
-    print format(inst.bitset,'b')
+    print(inst)
+    print(format(inst.bitset,'b'))
 
     inst = Inst.from_list([1,1,1,0,1,1,-1,None],10,zero_indexed=False)
-    print inst
-    print format(inst.bitset,'b')
+    print(inst)
+    print(format(inst.bitset,'b'))
 
     inst = Inst.from_bitset(2047,10)
-    print inst
-    print format(inst.bitset,'b')
+    print(inst)
+    print(format(inst.bitset,'b'))
 
     inst = Inst.from_literal(1,10)
-    print inst
-    print "1---------"
+    print(inst)
+    print("1---------")
 
     inst = Inst.from_literal(-1,10)
-    print inst
-    print "0---------"
+    print(inst)
+    print("0---------")
 
 
     """
@@ -70,24 +71,24 @@ def run_test_inst():
     print "%s + %s = %s" % (inst1,inst2,inst3)
     """
 
-    print "=== InstMap ==="
+    print("=== InstMap ===")
     inst = InstMap()
     inst[1] = 1
     inst[2] = True
     inst[9] = 0
     inst[10] = False
-    print "%s == 11------00" % inst 
+    print("%s == 11------00" % inst) 
     inst[2] = None
     del inst[9]
-    print "%s == 1--------0" % inst 
-    print "1 in inst? %s == True" % (1 in inst)
-    print "2 in inst? %s == False" % (2 in inst)
+    print("%s == 1--------0" % inst) 
+    print("1 in inst? %s == True" % (1 in inst))
+    print("2 in inst? %s == False" % (2 in inst))
     inst[3] = True
-    print inst
+    print(inst)
     varset = ",".join(str(var) for var in inst.inst.keys())
-    print "varset: (%d) %s" % (len(inst),varset)
+    print("varset: (%d) %s" % (len(inst),varset))
     for var,val in inst:
-        print "inst[%d] = %d" % (var,val)
+        print("inst[%d] = %d" % (var,val))
 
     inst[5] = 1
     inst[6] = 1
@@ -95,8 +96,8 @@ def run_test_inst():
     inst[8] = 0
     inst[9] = None
     inst[10] = None
-    print inst
-    print format(inst.bitset,'b')
+    print(inst)
+    print(format(inst.bitset,'b'))
 
     inst[5] = 0
     inst[6] = None
@@ -104,8 +105,8 @@ def run_test_inst():
     inst[8] = None
     inst[9] = 0
     inst[10] = 1
-    print inst
-    print format(inst.bitset,'b')
+    print(inst)
+    print(format(inst.bitset,'b'))
 
     del inst[5]
     del inst[6]
@@ -113,8 +114,8 @@ def run_test_inst():
     del inst[8]
     del inst[9]
     del inst[10]
-    print inst
-    print format(inst.bitset,'b')
+    print(inst)
+    print(format(inst.bitset,'b'))
 
     inst_list = [ InstMap.from_list([0,1,0,1,0]), \
                   InstMap.from_list([0,1,0,1,0,1],zero_indexed=False), \
@@ -122,15 +123,15 @@ def run_test_inst():
                   InstMap.from_bitset(0,5), \
                   InstMap.from_bitset(31,5), \
                   InstMap.from_list([None]*5) ]
-    print inst_list
-    print "[01010, 10101, 01-1-, 00000, 11111, -----]"
-    print sorted(inst_list)
-    print "[-----, 01-1-, 00000, 01010, 10101, 11111]"
+    print(inst_list)
+    print("[01010, 10101, 01-1-, 00000, 11111, -----]")
+    print(sorted(inst_list))
+    print("[-----, 01-1-, 00000, 01010, 10101, 11111]")
 
     inst1 = InstMap.from_list([-1,-1,1,-1,1,-1])
     inst2 = InstMap.from_list([-1,0,-1,0,-1,0])
     inst3 = inst1.concat(inst2)
-    print "%s + %s = %s" % (inst1,inst2,inst3)
+    print("%s + %s = %s" % (inst1,inst2,inst3))
 
 def run_test(vtree_filename,sdd_filename,N=1024,seed=0):
 
@@ -194,23 +195,23 @@ def run_test(vtree_filename,sdd_filename,N=1024,seed=0):
         testing  = DataSet.simulate(beta,N,seed=(seed+1))
 
     # PRINT SOME STATS
-    print "================================"
-    print " sdd model count: %s" % fmt(alpha.model_count(vtree))
-    print "       sdd count: %s" % fmt(alpha.count())
-    print "        sdd size: %s" % fmt(alpha.size())
-    print "================================"
-    print "psdd model count: %s" % fmt(beta.model_count())
-    print "      psdd count: %s" % fmt(beta.count())
-    print "       psdd size: %s" % fmt(beta.size())
-    print "================================"
-    print "     theta count: %s" % fmt(beta.theta_count())
-    print "      zero count: %s" % fmt(beta.zero_count())
-    print "      true count: %s" % fmt(beta.true_count())
-    print "================================"
-    print "   training size: %d" % training.N
-    print "    testing size: %d" % testing.N
-    print " unique training: %d" % len(training)
-    print "  unique testing: %d" % len(testing)
+    print("================================")
+    print(" sdd model count: %s" % fmt(alpha.model_count(vtree)))
+    print("       sdd count: %s" % fmt(alpha.count()))
+    print("        sdd size: %s" % fmt(alpha.size()))
+    print("================================")
+    print("psdd model count: %s" % fmt(beta.model_count()))
+    print("      psdd count: %s" % fmt(beta.count()))
+    print("       psdd size: %s" % fmt(beta.size()))
+    print("================================")
+    print("     theta count: %s" % fmt(beta.theta_count()))
+    print("      zero count: %s" % fmt(beta.zero_count()))
+    print("      true count: %s" % fmt(beta.true_count()))
+    print("================================")
+    print("   training size: %d" % training.N)
+    print("    testing size: %d" % testing.N)
+    print(" unique training: %d" % len(training))
+    print("  unique testing: %d" % len(testing))
 
     if manager.var_count <= PSddNode._brute_force_limit:
         pass
@@ -218,12 +219,12 @@ def run_test(vtree_filename,sdd_filename,N=1024,seed=0):
     return beta,manager
 
 def run_test_basename(basename,N=2**14):
-    print "######## " + basename
+    print("######## " + basename)
     dirname = path.join(path.dirname(__file__),'examples')
     vtree_filename = path.join(dirname,basename + '.vtree')
     sdd_filename = path.join(dirname,basename + '.sdd')
     alpha,pmanager = run_test(vtree_filename,sdd_filename,N=N)
-    print
+    print()
     return alpha,pmanager
 
 if __name__ == '__main__':
