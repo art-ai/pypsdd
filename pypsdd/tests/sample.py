@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+from builtins import range
 import glob
 from pylab import *
 
@@ -8,9 +9,9 @@ from pypsdd import Vtree,SddManager,PSddManager,io
 from pypsdd import DataSet,Prior,DirichletPrior,UniformSmoothing
 
 k = 50 # number of training sets
-Ns = range(8,13) # dataset sizes
-vtree_filename = "pypsdd/tests/examples/example.vtree"
-sdd_filename = "pypsdd/tests/examples/example.sdd"
+Ns = list(range(8,13)) # dataset sizes
+vtree_filename = "examples/example.vtree"
+sdd_filename = "examples/example.sdd"
 
 print("reading vtree and sdd ...")
 vtree = Vtree.read(vtree_filename)
@@ -26,7 +27,7 @@ Prior.random_parameters(beta) # randomly parameterize beta
 
 print("simulating datasets from beta ...")
 # for each N, simulate a set of k datasets
-train_sets = [ [DataSet.simulate(beta,2**N) for i in xrange(k)] for N in Ns ]
+train_sets = [ [DataSet.simulate(beta,2**N) for i in range(k)] for N in Ns ]
 
 print("running learning experiments ...")
 results = []

@@ -1,8 +1,11 @@
 from __future__ import absolute_import
+from past.builtins import cmp
+from builtins import next
+from builtins import object
 import heapq
 from .data import InstMap
 
-class SddNode:
+class SddNode(object):
     """Sentential Decision Diagram (SDD)"""
 
     # typedef's
@@ -484,7 +487,7 @@ class NormalizedSddNode(SddNode):
 # MODEL ENUMERATION
 ########################################
 
-class SddEnumerator:
+class SddEnumerator(object):
     """Manager for lexical model enumeration.
 
     Caching only nodes (caching elements may not help much?)"""
@@ -512,7 +515,7 @@ class SddEnumerator:
     def enumerator(self,node):
         return SddNodeEnumerator(node,self.vtree,self)
 
-class SddTerminalEnumerator:
+class SddTerminalEnumerator(object):
     """Enumerator for terminal SDD nodes"""
 
     def __init__(self,node,vtree):
@@ -535,14 +538,14 @@ class SddTerminalEnumerator:
     def empty(self):
         return len(self.heap) == 0
 
-    def next(self):
+    def __next__(self):
         if self.empty(): raise StopIteration()
         return heapq.heappop(self.heap)
 
     def __cmp__(self,other):
         return cmp(self.heap[0],other.heap[0])
 
-class SddNodeEnumerator:
+class SddNodeEnumerator(object):
     """Enumerator for SDD decomposition nodes"""
 
     def __init__(self,node,vtree,enum_manager):
@@ -580,7 +583,7 @@ class SddNodeEnumerator:
     def empty(self):
         return len(self.heap) == 0
 
-    def next(self):
+    def __next__(self):
         while not self.empty():
             enum = heapq.heappop(self.heap)
             model = next(enum)
@@ -601,10 +604,10 @@ class SddNodeEnumerator:
                 except StopIteration:
                     return
 
-class SddElementEnumerator:
+class SddElementEnumerator(object):
     """Enumerator for SDD elements (prime/sub pairs)"""
 
-    class HeapElement:
+    class HeapElement(object):
         def __init__(self,pinst,siter,element_enum,piter=None):
             self.pinst = pinst
             self.piter = piter
@@ -629,7 +632,7 @@ class SddElementEnumerator:
             except StopIteration:
                 self.inst = None
 
-        def next(self):
+        def __next__(self):
             if self.inst is None:
                 raise StopIteration()
             else:
@@ -668,7 +671,7 @@ class SddElementEnumerator:
             enum = SddElementEnumerator.HeapElement(pinst,siter,self,piter=piter)
             if not enum.empty(): heapq.heappush(self.heap,enum)
 
-    def next(self):
+    def __next__(self):
         while not self.empty():
             best = heapq.heappop(self.heap)
             inst = next(best)

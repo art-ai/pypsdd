@@ -1,11 +1,17 @@
+from __future__ import division
+from past.builtins import cmp
+from builtins import str
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import math
 import random
-from itertools import izip
+
 from collections import defaultdict
 
 # AC: TODO: empty Inst?  Inst.from_list([],var_count)?
 
-class DataSet:
+class DataSet(object):
     """Dataset.  Implements a Dict from object to count in dataset"""
 
     def __init__(self):
@@ -33,11 +39,11 @@ class DataSet:
         del self.data[key]
 
     def __iter__(self):
-        return self.data.iteritems()
+        return iter(self.data.items())
 
     def __repr__(self,limit=10):
         cmpf = lambda x,y:-cmp(x[1],y[1])
-        items = sorted(self.data.items(),cmp=cmpf)
+        items = sorted(list(self.data.items()),cmp=cmpf)
         fmt = " %%%dd %%s" % len(str(items[0][1]))
         st = [ fmt % (count,inst) for inst,count in items[:limit] ]
         if len(items) > limit: st.append(" ...")
@@ -61,14 +67,14 @@ class DataSet:
     def save_as_csv(self,filename):
         with open(filename,'w') as f:
             for inst,count in self:
-                for i in xrange(count):
+                for i in range(count):
                     f.write(",".join(str(val) for var,val in inst))
                     f.write("\n")
 
     def log_likelihood(self):
         """log likelihood of a dataset, given the data distribution"""
         N = float(self.N)
-        return sum( count*math.log(count/N) for inst,count in self )
+        return sum( count*math.log(old_div(count,N)) for inst,count in self )
 
     @staticmethod
     def simulate(psdd,N,seed=None):
@@ -77,7 +83,7 @@ class DataSet:
 
         dataset = DataSet()
         var_count = psdd.vtree.var_count
-        for i in xrange(N):
+        for i in range(N):
             inst = [None]*(var_count+1)
             inst = psdd.simulate(inst=inst)
             inst = Inst.from_list(inst,var_count,zero_indexed=False)
@@ -87,7 +93,7 @@ class DataSet:
     @staticmethod
     def instances(var_count):
         """generates all instantiations over var_count variables"""
-        for i in xrange(2**var_count):
+        for i in range(2**var_count):
             yield Inst.from_bitset(i,var_count)
 
 class Inst(tuple):
@@ -139,14 +145,14 @@ class Inst(tuple):
         if end_pad is not False:
             lst_count = lst_count+1 if front_pad else lst_count
             end_pad = end_pad-lst_count
-            for j in xrange(end_pad):
+            for j in range(end_pad):
                 yield None
 
     @staticmethod
     def _bit_enumerator(bitset,var_count):
-        for var in xrange(var_count,0,-1):
+        for var in range(var_count,0,-1):
             val = bitset % 2
-            bitset = bitset / 2
+            bitset = old_div(bitset, 2)
             yield val
 
     @classmethod
@@ -158,7 +164,7 @@ class Inst(tuple):
     @classmethod
     def from_dict(cls,dct,var_count):
         """new (possibly incomplete) Inst from dictionary."""
-        inst = ( dct.get(i) for i in xrange(var_count+1) )
+        inst = ( dct.get(i) for i in range(var_count+1) )
         return cls(inst)
 
     @classmethod
@@ -171,7 +177,7 @@ class Inst(tuple):
     @classmethod
     def from_literal(cls,lit,var_count):
         """ new Inst from literal"""
-        inst = ( lit > 0 if i == abs(lit) else None for i in xrange(var_count+1) )
+        inst = ( lit > 0 if i == abs(lit) else None for i in range(var_count+1) )
         return cls(inst)
 
     def __len__(self):
@@ -239,7 +245,7 @@ class Inst(tuple):
         else:
             return self.inst[var] == value
 
-class InstMap:
+class InstMap(object):
     """Instantiation as a map/dict.  Better for partial instantiations.
 
     Updates in this class should be reflected in Inst"""
@@ -270,9 +276,9 @@ class InstMap:
     def from_bitset(cls,bitset,var_count):
         """new (complete) Inst from bitstring"""
         inst = cls()
-        for var in xrange(var_count,0,-1):
+        for var in range(var_count,0,-1):
             val = bitset % 2
-            bitset = bitset / 2
+            bitset = old_div(bitset, 2)
             inst[var] = val
         return inst
 
@@ -344,7 +350,7 @@ class InstMap:
 
     def __iter__(self):
         """generator for (var,value) pairs"""
-        for var in self.inst.keys():
+        for var in list(self.inst.keys()):
             yield var,self.inst[var]
 
     #def __reversed__(self): pass
@@ -376,7 +382,7 @@ class InstMap:
         if as_bitstring:
             st = { 0:"0",1:"1",None:"-" }
             inst = [ self.inst[var] if var in self.inst else None \
-                     for var in xrange(1,self.var_count+1) ]
+                     for var in range(1,self.var_count+1) ]
             return "".join(st[val] for val in inst)
         else:
             return " ".join("%d:%d" % (var,self.inst[var]) \
@@ -460,7 +466,7 @@ class WeightedInstMap(InstMap):
         if as_bitstring:
             st = { 0:"0",1:"1",None:"-" }
             inst = [ self.inst[var] if var in self.inst else None \
-                     for var in xrange(1,self.var_count+1) ]
+                     for var in range(1,self.var_count+1) ]
             st = "".join(st[val] for val in inst)
             st += " %.4f" % self.weight
             return st

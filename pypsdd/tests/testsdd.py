@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+from builtins import str
+from builtins import range
 from os import path
 import locale # for printing numbers with commas
 locale.setlocale(locale.LC_ALL, "en_US.UTF8")
@@ -19,7 +21,7 @@ def run_test(vtree_filename,sdd_filename,\
         alpha = io.sdd_read(sdd_filename,manager)
 
     with Timer("counting %d models" % count_models):
-        for i in xrange(count_models):
+        for i in range(count_models):
             alpha.model_count(vtree)
 
     # PRINT SOME STATS

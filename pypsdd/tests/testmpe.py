@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+from __future__ import division
+from past.utils import old_div
 from os import path
 import locale # for printing numbers with commas
 locale.setlocale(locale.LC_ALL, "en_US.UTF8")
@@ -44,7 +46,7 @@ def run_test(vtree_filename,sdd_filename,seed=0,enum_models=0):
     if beta.vtree.var_count <= 10:
         print(beta.as_table())
     mpe_val,mpe_inst = beta.mpe()
-    mpe_val = mpe_val if beta.is_false_sdd else mpe_val/beta.theta_sum
+    mpe_val = mpe_val if beta.is_false_sdd else old_div(mpe_val,beta.theta_sum)
     print("mpe: %s %.8f" % (mpe_inst,mpe_val))
 
     if enum_models:

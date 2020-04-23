@@ -1,9 +1,13 @@
 from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import division
+from builtins import zip
+from builtins import object
+from past.utils import old_div
 import math
 import random
 import heapq
-from itertools import izip
+
 
 from .sdd import SddNode,NormalizedSddNode
 from .data import DataSet,Inst,InstMap,WeightedInstMap
@@ -130,7 +134,7 @@ class PSddNode(NormalizedSddNode):
             while queue:
                 node = queue.pop()
                 assert node.data is not None
-                pr *= node.theta[node.data]/node.theta_sum
+                pr *= old_div(node.theta[node.data],node.theta_sum)
                 if node.is_decomposition():
                     queue.append(node.data[0]) # prime
                     queue.append(node.data[1]) # sub
@@ -157,7 +161,7 @@ class PSddNode(NormalizedSddNode):
                 value = 0.0
                 for p,s in node.positive_elements:
                     theta = node.theta[(p,s)]
-                    value += (p.data/p.theta_sum)*(s.data/s.theta_sum)*theta
+                    value += (old_div(p.data,p.theta_sum))*(old_div(s.data,s.theta_sum))*theta
             node.data = value
 
         return value
@@ -165,7 +169,7 @@ class PSddNode(NormalizedSddNode):
     def probability(self,evidence=InstMap(),clear_data=True):
         """Compute the probability of evidence in a PSDD"""
         value = self.value(evidence=evidence,clear_data=clear_data)
-        return value/self.theta_sum
+        return old_div(value,self.theta_sum)
 
     def marginals(self,evidence=InstMap(),clear_data=True,do_bottom_up=True):
         """Evaluate a PSDD top-down for its marginals.
@@ -191,8 +195,8 @@ class PSddNode(NormalizedSddNode):
             if node.is_true() or node.is_literal():
                 # accumulate variable marginals
                 var = node.vtree.var
-                pr_pos = node.theta[1]/node.theta_sum
-                pr_neg = node.theta[0]/node.theta_sum
+                pr_pos = old_div(node.theta[1],node.theta_sum)
+                pr_neg = old_div(node.theta[0],node.theta_sum)
                 if var in evidence:
                     val = evidence[var]
                     if val: var_marginals[ var] += pr_pos*node.pr_context
@@ -203,12 +207,12 @@ class PSddNode(NormalizedSddNode):
             else: # node.is_decomposition()
                 # accumulate node marginals
                 for p,s in node.positive_elements:
-                    theta = node.theta[(p,s)]/node.theta_sum
-                    pr_p = p.data/p.theta_sum
-                    pr_s = s.data/s.theta_sum
+                    theta = old_div(node.theta[(p,s)],node.theta_sum)
+                    pr_p = old_div(p.data,p.theta_sum)
+                    pr_s = old_div(s.data,s.theta_sum)
                     p.pr_context += theta*pr_s*node.pr_context
                     s.pr_context += theta*pr_p*node.pr_context
-            node.pr_node = node.pr_context*(node.data/node.theta_sum)
+            node.pr_node = node.pr_context*(old_div(node.data,node.theta_sum))
 
         var_marginals[0] = value
         return var_marginals
@@ -240,11 +244,11 @@ class PSddNode(NormalizedSddNode):
                     mpe_ind = theta.index(mpe_val)
             else: # node.is_decomposition()
                 pels = node.positive_elements
-                pvals = [ p.data[0]/p.theta_sum for p,s in pels ]
-                svals = [ s.data[0]/s.theta_sum for p,s in pels ]
+                pvals = [ old_div(p.data[0],p.theta_sum) for p,s in pels ]
+                svals = [ old_div(s.data[0],s.theta_sum) for p,s in pels ]
                 vals = [ pval*sval*node.theta[el] for pval,sval,el \
                          in zip(pvals,svals,pels) ]
-                mpe_val,mpe_ind = max(zip(vals,pels))
+                mpe_val,mpe_ind = max(list(zip(vals,pels)))
             node.data = (mpe_val,mpe_ind)
 
         mpe_inst = InstMap()
@@ -301,18 +305,18 @@ class PSddNode(NormalizedSddNode):
         """Compute KL-divergence between two PSDDs, recursively.  The PSDDs
         must have the same structure, but may have different parameters."""
         if self.is_false_sdd: return 0.0
-        for n1,n2 in izip(self.as_positive_list(),other.as_positive_list()):
+        for n1,n2 in zip(self.as_positive_list(),other.as_positive_list()):
             assert n1.id == n2.id
             if n1.is_false_sdd:
                 kl = 0.0
             elif n1.vtree.is_leaf():
-                pr1 = [ p/n1.theta_sum for p in n1.theta ]
-                pr2 = [ p/n2.theta_sum for p in n2.theta ]
+                pr1 = [ old_div(p,n1.theta_sum) for p in n1.theta ]
+                pr2 = [ old_div(p,n2.theta_sum) for p in n2.theta ]
                 kl = PSddNode.kl(pr1,pr2)
             else: # decomposition
                 pels1,pels2 = n1.positive_elements,n2.positive_elements
-                pr1 = [ n1.theta[el]/n1.theta_sum for el in pels1 ]
-                pr2 = [ n2.theta[el]/n2.theta_sum for el in pels2 ]
+                pr1 = [ old_div(n1.theta[el],n1.theta_sum) for el in pels1 ]
+                pr2 = [ old_div(n2.theta[el],n2.theta_sum) for el in pels2 ]
                 kl = sum( p1*(p.data+s.data) for p1,(p,s) in zip(pr1,pels1) )
                 kl += PSddNode.kl(pr1,pr2)
             n1.data = kl
@@ -324,17 +328,17 @@ class PSddNode(NormalizedSddNode):
         parameters.  This one uses node marginals to compute the KL."""
         self.marginals()
         kl = 0.0
-        for n1,n2 in izip(self.as_positive_list(),other.as_positive_list()):
+        for n1,n2 in zip(self.as_positive_list(),other.as_positive_list()):
             assert n1.id == n2.id
             if n1.is_false_sdd or n1.pr_node == 0.0:
                 continue
             elif n1.vtree.is_leaf():
-                pr1 = [ p/n1.theta_sum for p in n1.theta ]
-                pr2 = [ p/n2.theta_sum for p in n2.theta ]
+                pr1 = [ old_div(p,n1.theta_sum) for p in n1.theta ]
+                pr2 = [ old_div(p,n2.theta_sum) for p in n2.theta ]
                 kl += n1.pr_node * PSddNode.kl(pr1,pr2)
             else: # decomposition
-                pr1 = [ n1.theta[el]/n1.theta_sum for el in n1.positive_elements ]
-                pr2 = [ n2.theta[el]/n2.theta_sum for el in n2.positive_elements ]
+                pr1 = [ old_div(n1.theta[el],n1.theta_sum) for el in n1.positive_elements ]
+                pr2 = [ old_div(n2.theta[el],n2.theta_sum) for el in n2.positive_elements ]
                 kl += n1.pr_node * PSddNode.kl(pr1,pr2)
         return kl
 
@@ -349,7 +353,7 @@ class PSddNode(NormalizedSddNode):
         q = random.random()
         cur = 0.0
         for item,p in pr:
-            cur += p/z
+            cur += old_div(p,z)
             if q <= cur:
                 return item
         return item
@@ -361,14 +365,14 @@ class PSddNode(NormalizedSddNode):
         if inst is None: inst = InstMap()
 
         if self.is_true():
-            p = self.theta[0]/self.theta_sum
+            p = old_div(self.theta[0],self.theta_sum)
             val = 0 if random.random() < p else 1
             inst[self.vtree.var] = val
         elif self.is_literal():
             val = 0 if self.literal < 0 else 1
             inst[self.vtree.var] = val
         else:
-            pr = self.theta.iteritems()
+            pr = iter(self.theta.items())
             p,s = PSddNode.sample(pr,z=self.theta_sum)
             p.simulate(inst=inst)
             s.simulate(inst=inst)
@@ -402,8 +406,8 @@ class PSddNode(NormalizedSddNode):
         prior.initialize_psdd(self)
         n = len(data)
         for i,(inst,count) in enumerate(data):
-            if verbose and (n-i-1)%max(1,(n/10)) == 0:
-                print("%3.0f%% done" % (100.0*(i+1)/n))
+            if verbose and (n-i-1)%max(1,(old_div(n,10))) == 0:
+                print("%3.0f%% done" % (old_div(100.0*(i+1),n)))
             # mark satisfying sub-circuit
             self.is_model_marker(inst,clear_bits=False,clear_data=False)
             self._increment_follow_marker(float(count))
@@ -425,7 +429,7 @@ class PSddNode(NormalizedSddNode):
 # SUB-CIRCUIT
 ########################################
 
-class SubCircuit:
+class SubCircuit(object):
     """Sub-Circuit's of PSDD models"""
 
     def __init__(self,node,element,left,right):
@@ -435,7 +439,7 @@ class SubCircuit:
         self.right = right
 
     def __repr__(self):
-        pr = self.node.theta[self.element]/self.node.theta_sum
+        pr = old_div(self.node.theta[self.element],self.node.theta_sum)
         vt_id = self.node.vtree.id
         node_id = self.node.id
         if self.node.is_decomposition():
@@ -470,7 +474,7 @@ class SubCircuit:
         return SubCircuit(node,element,left,right)
 
     def probability(self):
-        pr = self.node.theta[self.element]/self.node.theta_sum
+        pr = old_div(self.node.theta[self.element],self.node.theta_sum)
         if self.left is not None:
             pr *= self.left.probability()
             pr *= self.right.probability()
@@ -499,7 +503,7 @@ class PSddEnumerator(SddEnumerator):
         """This is invoked after inst.concat(other)"""
         element = (element_enum.prime,element_enum.sub)
         parent = element_enum.parent
-        theta = parent.theta[element]/parent.theta_sum
+        theta = old_div(parent.theta[element],parent.theta_sum)
         inst.mult_weight(theta)
 
     def __init__(self,vtree):
@@ -519,10 +523,10 @@ class PSddTerminalEnumerator(SddTerminalEnumerator):
             inst = WeightedInstMap.from_literal(node.literal,weight=1.0)
             heapq.heappush(self.heap,inst)
         if node.is_true():
-            weight = node.theta[0]/node.theta_sum
+            weight = old_div(node.theta[0],node.theta_sum)
             inst = WeightedInstMap.from_literal(-vtree.var,weight=weight)
             heapq.heappush(self.heap,inst)
 
-            weight = node.theta[1]/node.theta_sum
+            weight = old_div(node.theta[1],node.theta_sum)
             inst = WeightedInstMap.from_literal(vtree.var,weight=weight)
             heapq.heappush(self.heap,inst)

@@ -1,8 +1,9 @@
 from __future__ import print_function
+from builtins import object
 import sys
 import time
 
-class Timer:
+class Timer(object):
     """Utility for timing code via Python's "with" statement.
 
     Examples

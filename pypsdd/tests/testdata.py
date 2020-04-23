@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+from builtins import str
+from builtins import range
 from os import path
 import random
 from collections import defaultdict
@@ -8,10 +10,10 @@ import locale # for printing numbers with commas
 locale.setlocale(locale.LC_ALL, "en_US.UTF8")
 
 #import pypsdd
-from .. import Vtree,SddManager,PSddManager,SddNode,PSddNode
-from .. import Timer,DataSet,Inst,InstMap
-from .. import Prior,DirichletPrior,UniformSmoothing
-from .. import io
+from pypsdd import Vtree,SddManager,PSddManager,SddNode,PSddNode
+from pypsdd import Timer,DataSet,Inst,InstMap
+from pypsdd import Prior,DirichletPrior,UniformSmoothing
+from pypsdd import io
 
 def fmt(number):
     return locale.format("%d",number,grouping=True)
@@ -85,7 +87,7 @@ def run_test_inst():
     print("2 in inst? %s == False" % (2 in inst))
     inst[3] = True
     print(inst)
-    varset = ",".join(str(var) for var in inst.inst.keys())
+    varset = ",".join(str(var) for var in list(inst.inst.keys()))
     print("varset: (%d) %s" % (len(inst),varset))
     for var,val in inst:
         print("inst[%d] = %d" % (var,val))
@@ -153,28 +155,28 @@ def run_test(vtree_filename,sdd_filename,N=1024,seed=0):
     with Timer("drawing samples"):
         random.seed(seed)
         training,testing = [],[]
-        for i in xrange(N):
+        for i in range(N):
             training.append(beta.simulate())
-        for i in xrange(N):
+        for i in range(N):
             testing.append(beta.simulate())
 
     # SIMULATE DATASETS
     with Timer("drawing samples (into dict)"):
         random.seed(seed)
         training,testing = defaultdict(lambda: 1),defaultdict(lambda: 1)
-        for i in xrange(N):
+        for i in range(N):
             training[tuple(beta.simulate())] += 1
-        for i in xrange(N):
+        for i in range(N):
             testing[tuple(beta.simulate())] += 1
 
     # SIMULATE DATASETS
     with Timer("drawing samples new (list)"):
         random.seed(seed)
         training,testing = [],[]
-        for i in xrange(N):
+        for i in range(N):
             inst = [None]*(manager.var_count+1)
             training.append(beta.simulate(inst=inst))
-        for i in xrange(N):
+        for i in range(N):
             inst = [None]*(manager.var_count+1)
             testing.append(beta.simulate(inst=inst))
 
