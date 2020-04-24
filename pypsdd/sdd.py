@@ -545,6 +545,24 @@ class SddTerminalEnumerator(object):
     def __cmp__(self,other):
         return cmp(self.heap[0],other.heap[0])
 
+    def __lt__(self, other):
+        return cmp(self.heap[0], other.heap[0]) < 0
+
+    def __gt__(self, other):
+        return cmp(self.heap[0], other.heap[0]) > 0
+
+    def __le__(self, other):
+        return cmp(self.heap[0], other.heap[0]) <= 0
+
+    def __ge__(self, other):
+        return cmp(self.heap[0], other.heap[0]) >= 0
+
+    def __eq__(self, other):
+        return cmp(self.heap[0], other.heap[0]) == 0
+
+    def __ne__(self, other):
+        return cmp(self.heap[0], other.heap[0]) != 0
+
 class SddNodeEnumerator(object):
     """Enumerator for SDD decomposition nodes"""
 
@@ -644,6 +662,30 @@ class SddElementEnumerator(object):
             assert self.inst is not None and other.inst is not None
             return cmp(self.inst,other.inst)
 
+        def __lt__(self, other):
+            assert self.inst is not None and other.inst is not None
+            return cmp(self.inst, other.inst) < 0
+
+        def __le__(self, other):
+            assert self.inst is not None and other.inst is not None
+            return cmp(self.inst, other.inst) <= 0
+
+        def __gt__(self, other):
+            assert self.inst is not None and other.inst is not None
+            return cmp(self.inst, other.inst) > 0
+
+        def __ge__(self, other):
+            assert self.inst is not None and other.inst is not None
+            return cmp(self.inst, other.inst) >= 0
+
+        def __eq__(self, other):
+            assert self.inst is not None and other.inst is not None
+            return cmp(self.inst, other.inst) == 0
+
+        def __ne__(self, other):
+            assert self.inst is not None and other.inst is not None
+            return cmp(self.inst, other.inst) != 0
+
     def __init__(self,prime,sub,parent,vtree,enum_manager):
         self.prime = prime
         self.sub = sub
@@ -689,3 +731,26 @@ class SddElementEnumerator(object):
         assert not self.empty() and not other.empty()
         return cmp(self.heap[0].inst,other.heap[0].inst)
 
+    def __lt__(self, other):
+        assert not self.empty() and not other.empty()
+        return cmp(self.heap[0].inst, other.heap[0].inst) < 0
+
+    def __le__(self, other):
+        assert not self.empty() and not other.empty()
+        return cmp(self.heap[0].inst, other.heap[0].inst) <= 0
+
+    def __gt__(self, other):
+        assert not self.empty() and not other.empty()
+        return cmp(self.heap[0].inst, other.heap[0].inst) > 0
+
+    def __ge__(self, other):
+        assert not self.empty() and not other.empty()
+        return cmp(self.heap[0].inst, other.heap[0].inst) >= 0
+
+    def __eq__(self, other):
+        assert not self.empty() and not other.empty()
+        return cmp(self.heap[0].inst, other.heap[0].inst) == 0
+
+    def __ne__(self, other):
+        assert not self.empty() and not other.empty()
+        return cmp(self.heap[0].inst, other.heap[0].inst) != 0
