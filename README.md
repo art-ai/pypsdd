@@ -24,6 +24,14 @@ See also: http://reasoning.cs.ucla.edu/psdd/
 Sample code demonstrating how to use the PyPSDD Package can be found
 in pypsdd/tests/.
 
+## PACKAGE
+
+An AUR package is available for Arch Linux.
+
+```
+yay -S python-pypsdd
+```
+
 ## REFERENCES
 
 The PSDD was originally introduced in the paper:
