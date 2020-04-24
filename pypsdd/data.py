@@ -230,9 +230,30 @@ class Inst(tuple):
         if len(self) > len(other): return 1
         return cmp(self.bitset,other.bitset)
 
+    def __lt__(self, other):
+        return (len(self) < len(other)) or (self.bitset < other.bitset)
+
+    def __gt__(self, other):
+        return (len(self) > len(other)) or (self.bitset > other.bitset)
+
+    def __le__(self, other):
+        return (len(self) <= len(other)) or (self.bitset <= other.bitset)
+
+    def __ge__(self, other):
+        return (len(self) >= len(other)) or (self.bitset >= other.bitset)
+
+    def __eq__(self, other):
+        return (len(self) == len(other)) and (self.bitset == other.bitset)
+
+    def __ne__(self, other):
+        return (len(self) != len(other)) or (self.bitset != other.bitset)
+
     def __repr__(self):
         st = { 0:"0",1:"1",None:"-" }
         return "".join(st[val] for val in self.inst[1:])
+
+    def __hash__(self):
+        return hash(tuple(self))
 
     @staticmethod
     def lit_to_value(lit):
@@ -362,13 +383,7 @@ class InstMap(object):
         """returns true if item is a variable that is set to a value"""
         return item in self.inst
 
-    def __cmp__(self, other):
-        """comparison, first by size and then by lexicographic order
-
-        Intended for two Inst with the same var_count"""
-        if len(self) < len(other): return -1
-        if len(self) > len(other): return 1
-
+    def _inner_cmp(self, other):
         if self.var_count > other.var_count:
             me  = self.bitset
             you = other.bitset << (self.var_count-other.var_count)
@@ -381,6 +396,33 @@ class InstMap(object):
 
         return cmp(me,you)
 
+    def __cmp__(self, other):
+        """comparison, first by size and then by lexicographic order
+
+        Intended for two Inst with the same var_count"""
+        if len(self) < len(other): return -1
+        if len(self) > len(other): return 1
+
+        return self._inner_cmp(other)
+
+    def __lt__(self, other):
+        return (len(self) < len(other)) or (self._inner_cmp(other) < 0)
+
+    def __gt__(self, other):
+        return (len(self) > len(other)) or (self._inner_cmp(other) > 0)
+
+    def __le__(self, other):
+        return (len(self) <= len(other)) or (self._inner_cmp(other) <= 0)
+
+    def __ge__(self, other):
+        return (len(self) >= len(other)) or (self._inner_cmp(other) >= 0)
+
+    def __eq__(self, other):
+        return (len(self) == len(other)) and (self._inner_cmp(other) == 0)
+
+    def __ne__(self, other):
+        return (len(self) != len(other)) or (self._inner_cmp(other) != 0)
+
     def __repr__(self,as_bitstring=True):
         if as_bitstring:
             st = { 0:"0",1:"1",None:"-" }
@@ -390,6 +432,9 @@ class InstMap(object):
         else:
             return " ".join("%d:%d" % (var,self.inst[var]) \
                             for var in sorted(self.inst.keys()))
+
+    def __hash__(self):
+        return hash(self.var_count*self.bitset*hash(frozenset(self.inst)))
 
     def concat(self, other):
         """concatenates self with other and returns new Inst"""
