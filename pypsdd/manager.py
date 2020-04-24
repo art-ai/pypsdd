@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 from __future__ import absolute_import
+import functools
 from past.builtins import cmp
 from builtins import range
 from builtins import object
@@ -51,7 +52,7 @@ class SddManager(object):
     def _canonical_elements(self,elements):
         """Given a list of elements, canonicalize them"""
         cmpf = lambda x,y: cmp(x[0].id,y[0].id)
-        elf = lambda x: tuple(sorted(x,cmp=cmpf))
+        elf = lambda x: tuple(sorted(x, key=functools.cmp_to_key(cmpf)))
         return elf(elements)
 
     def lookup_node(self,elements,vtree_node):

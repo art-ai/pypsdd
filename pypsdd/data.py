@@ -1,4 +1,5 @@
 from __future__ import division
+import functools
 from past.builtins import cmp
 from builtins import str
 from builtins import range
@@ -43,7 +44,7 @@ class DataSet(object):
 
     def __repr__(self,limit=10):
         cmpf = lambda x,y:-cmp(x[1],y[1])
-        items = sorted(list(self.data.items()),cmp=cmpf)
+        items = sorted(list(self.data.items()), key=functools.cmp_to_key(cmpf))
         fmt = " %%%dd %%s" % len(str(items[0][1]))
         st = [ fmt % (count,inst) for inst,count in items[:limit] ]
         if len(items) > limit: st.append(" ...")
@@ -328,7 +329,7 @@ class InstMap(object):
             self.bitset = self.bitset << (var-self.var_count)
             self.var_count = var
 
-        if value == 1 and (var not in self.inst or self.inst[var] is 0):
+        if value == 1 and (var not in self.inst or self.inst[var] == 0):
             self.bitset += 1 << (self.var_count-var)
         if (value == 0 or value is None) and \
            (var in self.inst and self.inst[var] == 1):
