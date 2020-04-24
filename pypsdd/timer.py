@@ -1,7 +1,9 @@
+from __future__ import print_function
+from builtins import object
 import sys
 import time
 
-class Timer:
+class Timer(object):
     """Utility for timing code via Python's "with" statement.
 
     Examples
@@ -23,11 +25,11 @@ class Timer:
         self.prefix = prefix
 
     def __enter__(self):
-        print self.prefix + self.msg + " ...",
+        print(self.prefix + self.msg + " ...", end=' ')
         sys.stdout.flush()
         self.start = time.time()
         return self
 
     def __exit__(self,type,value,traceback):
-        print "%.3fs" % (time.time()-self.start)
+        print("%.3fs" % (time.time()-self.start))
         sys.stdout.flush()

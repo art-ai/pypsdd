@@ -1,5 +1,11 @@
-from sdd import SddNode
-from psdd import PSddNode
+from __future__ import absolute_import
+from __future__ import division
+from builtins import str
+from builtins import next
+from builtins import range
+from past.utils import old_div
+from .sdd import SddNode
+from .psdd import PSddNode
 import math
 
 # AC: TODO: check vtree scope
@@ -13,7 +19,7 @@ def pairs(lst):
     if lst is None: return
     it = iter(lst)
     for x in it:
-        y = it.next()
+        y = next(it)
         yield (x,y)
 
 ########################################
@@ -216,7 +222,7 @@ def psdd_save_as_dot(root,filename,subcircuit=None,labels=_dot_names):
             elif n.theta[(p,s)] == n.theta_sum:
                 edge_label = '1'
             else:
-                edge_label = "%.2f" % (n.theta[(p,s)]/n.theta_sum)
+                edge_label = "%.2f" % (old_div(n.theta[(p,s)],n.theta_sum))
 
             f.write(_dot_psdd_element_fmt % (n.index,i,el_color,p_label,s_label))
             f.write(_dot_psdd_or_fmt % (n.index,n.index,i,edge_label,el_color))
@@ -236,11 +242,11 @@ def _psdd_node_label(root,subcircuit=None,labels=_dot_names):
         if subcircuit:
             sc_node = subcircuit.node_of_vtree(root.vtree)
         if subcircuit and root == sc_node.node:
-            theta = "%.2f" % (root.theta[sc_node.element]/root.theta_sum)
+            theta = "%.2f" % (old_div(root.theta[sc_node.element],root.theta_sum))
             label = label if sc_node.element else "&not;" + label
         else:
             if hasattr(root,'theta'):
-                theta = "%.2f" % (root.theta[1]/root.theta_sum)
+                theta = "%.2f" % (old_div(root.theta[1],root.theta_sum))
             else:
                 theta = "."
         return "%s:%s" % (label,theta)
@@ -293,10 +299,10 @@ def psdd_yitao_read(filename,pmanager):
             node_id,vtree_id,size = [ int(x) for x in line[:3] ]
             line_iter = iter(line[3:])
             elements,theta = list(),dict()
-            for i in xrange(size):
-                p = nodes[int(line_iter.next())]
-                s = nodes[int(line_iter.next())]
-                log_theta = float(line_iter.next())
+            for i in range(size):
+                p = nodes[int(next(line_iter))]
+                s = nodes[int(next(line_iter))]
+                log_theta = float(next(line_iter))
                 element = (p,s)
                 elements.append(element)
                 theta[element] = math.exp(log_theta)

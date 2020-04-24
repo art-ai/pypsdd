@@ -1,4 +1,5 @@
-class Vtree:
+from builtins import object
+class Vtree(object):
     """Vtrees (variable trees)"""
 
     def __init__(self,left,right,var):
