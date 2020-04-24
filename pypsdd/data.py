@@ -203,8 +203,10 @@ class Inst(tuple):
 
     def __getitem__(self, key):
         """inst[key] where abs(key) is in [1,var_count]"""
-        var,value = self.check_key_value(key,None)
-        return super(Inst,self).__getitem__(var)
+        if type(key) is not slice:
+            var,value = self.check_key_value(key,None)
+            return super(Inst,self).__getitem__(var)
+        return super(Inst, self).__getitem__(key)
 
     #def __missing__(self, key): pass
 
