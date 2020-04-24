@@ -7,6 +7,9 @@ from past.utils import old_div
 from os import path
 import locale # for printing numbers with commas
 locale.setlocale(locale.LC_ALL, "en_US.UTF8")
+
+import sys
+sys.path.insert(0, '../..')
 from pypsdd import Vtree,SddManager,PSddManager,SddNode
 from pypsdd import Timer,DataSet,Inst,InstMap
 from pypsdd import Prior,DirichletPrior,UniformSmoothing

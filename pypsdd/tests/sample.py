@@ -5,6 +5,9 @@ from builtins import range
 import glob
 from pylab import *
 
+import sys
+sys.path.insert(0, '../..')
+
 from pypsdd import Vtree,SddManager,PSddManager,io
 from pypsdd import DataSet,Prior,DirichletPrior,UniformSmoothing
 

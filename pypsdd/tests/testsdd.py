@@ -6,6 +6,9 @@ from builtins import range
 from os import path
 import locale # for printing numbers with commas
 locale.setlocale(locale.LC_ALL, "en_US.UTF8")
+
+import sys
+sys.path.insert(0, '../..')
 from pypsdd import Timer,Vtree,SddManager,SddNode
 from pypsdd import io
 

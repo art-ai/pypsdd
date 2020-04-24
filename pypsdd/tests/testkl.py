@@ -4,6 +4,9 @@ from __future__ import print_function
 from os import path
 import locale # for printing numbers with commas
 locale.setlocale(locale.LC_ALL, "en_US.UTF8")
+
+import sys
+sys.path.insert(0, '../..')
 from pypsdd import Timer,Vtree,SddManager,PSddManager,SddNode,PSddNode,Inst
 from pypsdd import Prior,DirichletPrior,UniformSmoothing
 from pypsdd import io

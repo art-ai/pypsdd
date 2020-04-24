@@ -9,6 +9,9 @@ from collections import defaultdict
 import locale # for printing numbers with commas
 locale.setlocale(locale.LC_ALL, "en_US.UTF8")
 
+import sys
+sys.path.insert(0, '../..')
+
 #import pypsdd
 from pypsdd import Vtree,SddManager,PSddManager,SddNode,PSddNode
 from pypsdd import Timer,DataSet,Inst,InstMap
