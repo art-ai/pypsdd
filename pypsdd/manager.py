@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 
-from sdd import SddNode
-from psdd import PSddNode
+from __future__ import absolute_import
+import functools
+from past.builtins import cmp
+from builtins import range
+from builtins import object
+from .sdd import SddNode
+from .psdd import PSddNode
 
-class SddManager:
+class SddManager(object):
     """SDD Manager"""
 
     Node = SddNode # native node class
@@ -39,7 +44,7 @@ class SddManager:
 
         lit_type = SddNode.LITERAL
         self.literals = [None]*(2*self.var_count+1)
-        for var in xrange(1,self.var_count+1):
+        for var in range(1,self.var_count+1):
             vtree = self.var_to_vtree[var]
             self.literals[var] = self.Node(lit_type,var,vtree,self)
             self.literals[-var] = self.Node(lit_type,-var,vtree,self)
@@ -47,7 +52,7 @@ class SddManager:
     def _canonical_elements(self,elements):
         """Given a list of elements, canonicalize them"""
         cmpf = lambda x,y: cmp(x[0].id,y[0].id)
-        elf = lambda x: tuple(sorted(x,cmp=cmpf))
+        elf = lambda x: tuple(sorted(x, key=functools.cmp_to_key(cmpf)))
         return elf(elements)
 
     def lookup_node(self,elements,vtree_node):

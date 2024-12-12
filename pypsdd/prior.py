@@ -1,7 +1,12 @@
+from __future__ import division
+from builtins import zip
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import math
 import random
 
-class Prior:
+class Prior(object):
     """Abstract parameter prior class.
 
     Contains some basic functionality."""
@@ -28,9 +33,9 @@ class Prior:
         
         k is the number of states
         psi is the Dirichlet meta-parameter"""
-        pr = [ random.gammavariate(psi,1) for i in xrange(k) ]
+        pr = [ random.gammavariate(psi,1) for i in range(k) ]
         pr_sum = sum(pr)
-        return [ p/pr_sum for p in pr ]
+        return [ old_div(p,pr_sum) for p in pr ]
 
     @staticmethod
     def random_parameters(root,psi=1.0,seed=None):
@@ -50,7 +55,7 @@ class Prior:
             else: # node.is_decomposition()
                 pelements = node.positive_elements
                 pr = Prior.random_parameter_set(len(pelements),psi=psi)
-                node.theta = dict(zip(pelements,pr))
+                node.theta = dict(list(zip(pelements,pr)))
 
 class DirichletPrior(Prior):
     """Dirichlet prior for PSDDs"""
@@ -91,11 +96,11 @@ class DirichletPrior(Prior):
         for node in root.positive_iter():
             if node.is_true():
                 for theta in node.theta:
-                    theta = theta/node.theta_sum
+                    theta = old_div(theta,node.theta_sum)
                     log_prior += count*math.log(theta)
             elif node.is_decomposition():
                 for element in node.positive_elements:
-                    theta = node.theta[element]/node.theta_sum
+                    theta = old_div(node.theta[element],node.theta_sum)
                     log_prior += count*math.log(theta)
 
         return log_prior
@@ -138,8 +143,8 @@ class UniformSmoothing(Prior):
                 pelements = node.positive_elements
                 mc = float(node.data) # model count
                 nc = node.theta_sum   # node count
-                counts = [ nc*p.data*s.data/mc for p,s in pelements ]
-                node.theta = dict(zip(pelements,counts))
+                counts = [ old_div(nc*p.data*s.data,mc) for p,s in pelements ]
+                node.theta = dict(list(zip(pelements,counts)))
                 for (p,s),count in zip(pelements,counts):
                     p.theta_sum += count
                     s.theta_sum += count
@@ -156,14 +161,14 @@ class UniformSmoothing(Prior):
         for node in root.as_positive_list(reverse=True,clear_data=True):
             if node.is_true():
                 count = 0.5*node.data_sum
-                log_prior += count*math.log(node.theta[0]/node.theta_sum)
-                log_prior += count*math.log(node.theta[1]/node.theta_sum)
+                log_prior += count*math.log(old_div(node.theta[0],node.theta_sum))
+                log_prior += count*math.log(old_div(node.theta[1],node.theta_sum))
             elif node.is_decomposition():
                 for p,s in node.positive_elements:
                     count = node.data_sum*(p.data*s.data/float(node.data))
                     p.data_sum += count
                     s.data_sum += count
-                    theta = node.theta[(p,s)]/node.theta_sum
+                    theta = old_div(node.theta[(p,s)],node.theta_sum)
                     log_prior += count*math.log(theta)
 
         for node in root.as_positive_list(clear_data=False): del node.data_sum

@@ -1,7 +1,11 @@
+from __future__ import absolute_import
+from past.builtins import cmp
+from builtins import next
+from builtins import object
 import heapq
-from data import InstMap
+from .data import InstMap
 
-class SddNode:
+class SddNode(object):
     """Sentential Decision Diagram (SDD)"""
 
     # typedef's
@@ -483,7 +487,7 @@ class NormalizedSddNode(SddNode):
 # MODEL ENUMERATION
 ########################################
 
-class SddEnumerator:
+class SddEnumerator(object):
     """Manager for lexical model enumeration.
 
     Caching only nodes (caching elements may not help much?)"""
@@ -511,7 +515,7 @@ class SddEnumerator:
     def enumerator(self,node):
         return SddNodeEnumerator(node,self.vtree,self)
 
-class SddTerminalEnumerator:
+class SddTerminalEnumerator(object):
     """Enumerator for terminal SDD nodes"""
 
     def __init__(self,node,vtree):
@@ -534,14 +538,32 @@ class SddTerminalEnumerator:
     def empty(self):
         return len(self.heap) == 0
 
-    def next(self):
+    def __next__(self):
         if self.empty(): raise StopIteration()
         return heapq.heappop(self.heap)
 
     def __cmp__(self,other):
         return cmp(self.heap[0],other.heap[0])
 
-class SddNodeEnumerator:
+    def __lt__(self, other):
+        return cmp(self.heap[0], other.heap[0]) < 0
+
+    def __gt__(self, other):
+        return cmp(self.heap[0], other.heap[0]) > 0
+
+    def __le__(self, other):
+        return cmp(self.heap[0], other.heap[0]) <= 0
+
+    def __ge__(self, other):
+        return cmp(self.heap[0], other.heap[0]) >= 0
+
+    def __eq__(self, other):
+        return cmp(self.heap[0], other.heap[0]) == 0
+
+    def __ne__(self, other):
+        return cmp(self.heap[0], other.heap[0]) != 0
+
+class SddNodeEnumerator(object):
     """Enumerator for SDD decomposition nodes"""
 
     def __init__(self,node,vtree,enum_manager):
@@ -579,10 +601,10 @@ class SddNodeEnumerator:
     def empty(self):
         return len(self.heap) == 0
 
-    def next(self):
+    def __next__(self):
         while not self.empty():
             enum = heapq.heappop(self.heap)
-            model = enum.next()
+            model = next(enum)
             self.topk.append(model)
             if not enum.empty(): heapq.heappush(self.heap,enum)
             return model
@@ -596,14 +618,14 @@ class SddNodeEnumerator:
                 k += 1
             else:
                 try:
-                    self.next()
+                    next(self)
                 except StopIteration:
                     return
 
-class SddElementEnumerator:
+class SddElementEnumerator(object):
     """Enumerator for SDD elements (prime/sub pairs)"""
 
-    class HeapElement:
+    class HeapElement(object):
         def __init__(self,pinst,siter,element_enum,piter=None):
             self.pinst = pinst
             self.piter = piter
@@ -622,13 +644,13 @@ class SddElementEnumerator:
 
         def _try_next(self):
             try:
-                sinst = self.siter.next()
+                sinst = next(self.siter)
                 self.inst = self.pinst.concat(sinst)
                 self.enum_manager._element_update(self.element_enum,self.inst)
             except StopIteration:
                 self.inst = None
 
-        def next(self):
+        def __next__(self):
             if self.inst is None:
                 raise StopIteration()
             else:
@@ -639,6 +661,30 @@ class SddElementEnumerator:
         def __cmp__(self,other):
             assert self.inst is not None and other.inst is not None
             return cmp(self.inst,other.inst)
+
+        def __lt__(self, other):
+            assert self.inst is not None and other.inst is not None
+            return cmp(self.inst, other.inst) < 0
+
+        def __le__(self, other):
+            assert self.inst is not None and other.inst is not None
+            return cmp(self.inst, other.inst) <= 0
+
+        def __gt__(self, other):
+            assert self.inst is not None and other.inst is not None
+            return cmp(self.inst, other.inst) > 0
+
+        def __ge__(self, other):
+            assert self.inst is not None and other.inst is not None
+            return cmp(self.inst, other.inst) >= 0
+
+        def __eq__(self, other):
+            assert self.inst is not None and other.inst is not None
+            return cmp(self.inst, other.inst) == 0
+
+        def __ne__(self, other):
+            assert self.inst is not None and other.inst is not None
+            return cmp(self.inst, other.inst) != 0
 
     def __init__(self,prime,sub,parent,vtree,enum_manager):
         self.prime = prime
@@ -659,7 +705,7 @@ class SddElementEnumerator:
 
     def _push_next_element_enumerator(self,piter):
         try:
-            pinst = piter.next()
+            pinst = next(piter)
         except StopIteration:
             pinst = None
         if pinst is not None:
@@ -667,10 +713,10 @@ class SddElementEnumerator:
             enum = SddElementEnumerator.HeapElement(pinst,siter,self,piter=piter)
             if not enum.empty(): heapq.heappush(self.heap,enum)
 
-    def next(self):
+    def __next__(self):
         while not self.empty():
             best = heapq.heappop(self.heap)
-            inst = best.next()
+            inst = next(best)
 
             if best.piter is not None: # generate next prime model
                 piter,best.piter = best.piter,None
@@ -685,3 +731,26 @@ class SddElementEnumerator:
         assert not self.empty() and not other.empty()
         return cmp(self.heap[0].inst,other.heap[0].inst)
 
+    def __lt__(self, other):
+        assert not self.empty() and not other.empty()
+        return cmp(self.heap[0].inst, other.heap[0].inst) < 0
+
+    def __le__(self, other):
+        assert not self.empty() and not other.empty()
+        return cmp(self.heap[0].inst, other.heap[0].inst) <= 0
+
+    def __gt__(self, other):
+        assert not self.empty() and not other.empty()
+        return cmp(self.heap[0].inst, other.heap[0].inst) > 0
+
+    def __ge__(self, other):
+        assert not self.empty() and not other.empty()
+        return cmp(self.heap[0].inst, other.heap[0].inst) >= 0
+
+    def __eq__(self, other):
+        assert not self.empty() and not other.empty()
+        return cmp(self.heap[0].inst, other.heap[0].inst) == 0
+
+    def __ne__(self, other):
+        assert not self.empty() and not other.empty()
+        return cmp(self.heap[0].inst, other.heap[0].inst) != 0
