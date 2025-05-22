@@ -270,7 +270,7 @@ def psdd_yitao_read(filename,pmanager):
         node = None
         if line.startswith('c'): continue
         elif line.startswith('psdd'):
-            node_count = int(line[4:]) # ignored
+            node_count = line[4:].split()[-1] # ignored
             nodes = {}
         elif line.startswith('F'): # no FALSE nodes
             pass
