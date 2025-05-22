@@ -311,3 +311,158 @@ def psdd_yitao_read(filename,pmanager):
             nodes[node_id] = node
     f.close()
     return node
+
+########################################
+# PSDD I/O (AC/LMAP)
+########################################
+
+DEFAULT_VALUE = 1.0 # ACACAC
+
+def _psdd_literal_count(alpha):
+    """Counts the number of literals need in an AC of a PSDD."""
+    count = alpha.vtree.var_count
+    for node in alpha.positive_iter():
+        if node.is_literal(): # or node.is_false_sdd
+            pass
+        elif node.is_true():
+            count += 2
+        else: # node.is_decomposition()
+            count += len(node.positive_elements)
+    return count
+
+def _psdd_count_nodes_edges(alpha,manager):
+    nnf_id = 0 # nnf_id is also the node_count
+    edge_count = 0
+    nnf_map = {} # psdd-node-id to nnf-node-id
+
+    # literal nodes first
+    for node in manager.literals[1:]: # skip index 0 which is None
+        nnf_map[node.id] = nnf_id
+        nnf_id += 1
+    
+    # everything else
+    for node in alpha.positive_iter():
+        if node.is_true():
+            # node = (theta_nx * lit_nx) + (theta_x * lit_x)
+            nnf_id += 5
+            edge_count += 6
+            nnf_map[node.id] = nnf_id - 1
+        elif node.is_decomposition():
+            # let k be size of a decomposition
+            # each decomposition is one + node, with k edges 
+            # and k * nodes for prime/sub pairs, with 2k edges
+            # and k parameter nodes, with k edges
+            k = len(node.positive_elements)
+            nnf_id += 1 + 2*k
+            edge_count += 4*k
+            nnf_map[node.id] = nnf_id - 1
+
+    print "nnf node count: %d" % nnf_id
+    print "nnf edge count: %d" % edge_count
+    # return node_count (nnf_id) and edge_count
+    return nnf_id,edge_count,nnf_map
+
+def _psdd_save_ac(alpha,manager,ac_filename):
+    from collections import defaultdict
+
+    var_count = manager.var_count
+    node_count,edge_count,nnf_map = _psdd_count_nodes_edges(alpha,manager)
+    literal_count = _psdd_literal_count(alpha)
+
+    lit_id = var_count + 1
+    lit_map = defaultdict(lambda: DEFAULT_VALUE)
+    with open(ac_filename,'w') as f:
+        f.write("nnf %d %d %d\n" % (node_count,edge_count,literal_count))
+
+        # literal nodes first
+        for node in manager.literals[1:]: # skip index 0 which is None
+            f.write("l %d\n" % node.literal)
+            # lit_map[node.literal] = DEFAULT_VALUE
+
+        # everything else
+        for node in alpha.positive_iter():
+            if node.is_true():
+                # set up parameter literals
+                ntheta_lit,ptheta_lit = lit_id,lit_id+1
+                lit_map[ntheta_lit] = node.theta[0]
+                lit_map[ptheta_lit] = node.theta[1]
+                lit_id += 2
+
+                # lookup indicator literals
+                var = node.vtree.var
+                nlit,plit = manager.literals[-var],manager.literals[var]
+                nid,pid = nnf_map[nlit.id],nnf_map[plit.id]
+
+                nnf_id = nnf_map[node.id]
+                f.write("l %d\n" % ntheta_lit)               # nnf_id-4
+                f.write("l %d\n" % ptheta_lit)               # nnf_id-3
+                f.write("* 2 %d %d\n" % (nnf_id-4,nid))      # nnf_id-2
+                f.write("* 2 %d %d\n" % (nnf_id-3,pid))      # nnf_id-1
+                f.write("+ 2 %d %d\n" % (nnf_id-2,nnf_id-1)) # nnf_id
+            elif node.is_decomposition():
+                k = len(node.positive_elements)
+                nnf_id = nnf_map[node.id] - 2*k
+
+                element_ids = []
+                for p,s in node.positive_elements:
+                    # make parameter node
+                    f.write("l %d\n" % lit_id)                   # nnf_id
+                    lit_map[lit_id] = node.theta[(p,s)]
+                    lit_id += 1
+
+                    # make product node
+                    pid,sid = nnf_map[p.id],nnf_map[s.id]
+                    f.write("* 3 %d %d %d\n" % (nnf_id,pid,sid)) # nnf_id+1
+                    element_ids.append(nnf_id+1)
+                    nnf_id += 2
+                    
+                # make sum node
+                f.write("+ %d" % k) # orignal nnf_id (i.e., nnf_map[node.id])
+                for element_id in element_ids:
+                    f.write(" %d" % element_id)
+                f.write("\n")
+
+    return lit_map
+
+def _psdd_save_lmap(alpha,manager,lit_map,lmap_filename):
+    var_count = manager.var_count
+    lit_count = var_count + len(lit_map)
+    table_count = 0
+    with open(lmap_filename,'w') as f:
+        # header
+        f.write("c Following is the literal map:\n")
+        f.write("c\n")
+        f.write("cc$K$ALWAYS_SUM\n")
+        #f.write("cc$S$LOG_E\n")
+        f.write("cc$S$NORMAL\n")
+
+        # number of literals and variables
+        f.write("cc$N$%d\n" % lit_count)
+        f.write("cc$v$%d\n" % var_count)
+
+        # variable definition
+        # "cc" "V" srcVarName numSrcVals (srcVal)+
+        for var in range(var_count):
+            f.write("cc$V$x%d$2\n" % var)
+
+        # table definition
+        # "cc" "T" srcPotName parameterCnt
+        f.write("cc$t$%d\n" % table_count)
+
+        # (I)ndicator, (P)arameter, (C)onstant
+        # "cc" "I" literal weight elimOp srcVarName srcValName srcVal
+        # "cc" "P" literal weight elimOp srcPotName pos+
+        # "cc" "C" literal weight elimOp
+
+        # indicators
+        for var in range(var_count):
+            f.write("cc$I$-%d$%.1f$+$x%d$0\n" % (var+1,DEFAULT_VALUE,var))
+            f.write("cc$I$%d$%.1f$+$x%d$1\n" % (var+1,DEFAULT_VALUE,var))
+        # parameters
+        for lit in sorted(lit_map.keys()):
+            f.write("cc$C$-%d$%.8g$I$\n" % (lit,lit_map[-lit]) )
+            f.write("cc$C$%d$%.8g$I$\n" % (lit,lit_map[lit]) )
+
+def psdd_save_ac(alpha,manager,ac_filename,lmap_filename):
+    lit_map = _psdd_save_ac(alpha,manager,ac_filename)
+    _psdd_save_lmap(alpha,manager,lit_map,lmap_filename)
